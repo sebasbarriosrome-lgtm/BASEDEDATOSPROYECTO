@@ -13,7 +13,6 @@ BEGIN
 
     DECLARE v_count INT;
 
-    -- VALIDAR EMAIL DUPLICADO
     SELECT COUNT(*)
     INTO v_count
     FROM usuario
@@ -24,7 +23,6 @@ BEGIN
         SET MESSAGE_TEXT = 'El correo ya está registrado';
     END IF;
 
-    -- INSERTAR USUARIO
     INSERT INTO usuario (
         nombre,
         apellido,
@@ -49,7 +47,7 @@ CREATE PROCEDURE sp_get_usuario_by_email(
 )
 BEGIN
 
-    SELECT 
+    SELECT
         id,
         nombre,
         apellido,
@@ -77,7 +75,6 @@ BEGIN
 
     DECLARE v_count INT;
 
-    -- VALIDAR QUE EXISTA
     SELECT COUNT(*)
     INTO v_count
     FROM usuario
@@ -89,19 +86,109 @@ BEGIN
         SET MESSAGE_TEXT = 'El usuario no existe o ya fue eliminado';
     END IF;
 
-    -- SOFT DELETE
     UPDATE usuario
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = p_id;
 
 END $$
 
+
+-- =====================================================
+-- SP: ACTUALIZAR USUARIO
+-- =====================================================
+CREATE PROCEDURE sp_update_usuario(
+    IN p_email_actual VARCHAR(35),
+    IN p_nombre VARCHAR(20),
+    IN p_apellido VARCHAR(20),
+    IN p_email VARCHAR(35),
+    IN p_telefono VARCHAR(15),
+    IN p_birthDate DATE,
+    IN p_photoUrl VARCHAR(255)
+)
+BEGIN
+
+    DECLARE v_usuario_id BIGINT;
+    DECLARE v_count_email INT;
+    DECLARE v_perfil_count INT;
+
+    SELECT id
+    INTO v_usuario_id
+    FROM usuario
+    WHERE email = p_email_actual
+    LIMIT 1;
+
+    IF v_usuario_id IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Usuario no encontrado';
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_count_email
+    FROM usuario
+    WHERE email = p_email
+    AND id != v_usuario_id;
+
+    IF v_count_email > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El correo ya está registrado';
+    END IF;
+
+    UPDATE usuario
+    SET
+        nombre = p_nombre,
+        apellido = p_apellido,
+        email = p_email
+    WHERE id = v_usuario_id;
+
+    SELECT COUNT(*)
+    INTO v_perfil_count
+    FROM perfil_usuario
+    WHERE usuario_id = v_usuario_id;
+
+    IF v_perfil_count = 0 THEN
+
+        INSERT INTO perfil_usuario(
+            usuario_id,
+            telefono,
+            fecha_nacimiento,
+            foto_url,
+            created_at
+        )
+        VALUES(
+            v_usuario_id,
+            p_telefono,
+            p_birthDate,
+            p_photoUrl,
+            (
+                SELECT created_at
+                FROM usuario
+                WHERE id = v_usuario_id
+            )
+        );
+
+    ELSE
+
+        UPDATE perfil_usuario
+        SET
+            telefono = p_telefono,
+            fecha_nacimiento = p_birthDate,
+            foto_url = p_photoUrl
+        WHERE usuario_id = v_usuario_id;
+
+    END IF;
+
+END $$
+
+
+-- =====================================================
+-- SP: CREAR CLUB
+-- =====================================================
 CREATE PROCEDURE sp_create_club(
     IN p_nombre VARCHAR(50),
     IN p_ciudad VARCHAR(20),
     IN p_descripcion TEXT,
-    IN p_logo_url TEXT,          -- ✅ CAMBIADO
-    IN p_banner_url TEXT,        -- ✅ CAMBIADO
+    IN p_logo_url TEXT,
+    IN p_banner_url TEXT,
     IN p_color_primario VARCHAR(20),
     IN p_color_secundario VARCHAR(20),
     IN p_contacto VARCHAR(20)
@@ -111,11 +198,10 @@ BEGIN
     DECLARE v_count INT;
     DECLARE v_slug VARCHAR(50);
 
-    -- ✅ Validar duplicado (nombre + ciudad)
     SELECT COUNT(*)
     INTO v_count
     FROM club
-    WHERE nombre = p_nombre 
+    WHERE nombre = p_nombre
       AND ciudad = p_ciudad
       AND deleted_at IS NULL;
 
@@ -124,10 +210,8 @@ BEGIN
         SET MESSAGE_TEXT = 'El club ya existe en esa ciudad';
     END IF;
 
-    -- ✅ Generar slug (mejorado)
     SET v_slug = LOWER(REPLACE(TRIM(p_nombre), ' ', '-'));
 
-    -- ✅ Insertar club
     INSERT INTO club (
         nombre,
         slug,
@@ -155,95 +239,10 @@ BEGIN
 
 END $$
 
-CREATE PROCEDURE sp_update_usuario(
-    IN p_email_actual VARCHAR(35),
-    IN p_nombre VARCHAR(20),
-    IN p_apellido VARCHAR(20),
-    IN p_email VARCHAR(35),
-    IN p_telefono VARCHAR(15),
-    IN p_birthDate DATE,
-    IN p_photoUrl VARCHAR(255)
-)
-BEGIN
 
-    DECLARE v_usuario_id BIGINT;
-    DECLARE v_count_email INT;
-    DECLARE v_perfil_count INT;
-
-    -- BUSCAR USUARIO
-    SELECT id
-    INTO v_usuario_id
-    FROM usuario
-    WHERE email = p_email_actual
-    LIMIT 1;
-
-    IF v_usuario_id IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Usuario no encontrado';
-    END IF;
-
-    -- VALIDAR EMAIL DUPLICADO
-    SELECT COUNT(*)
-    INTO v_count_email
-    FROM usuario
-    WHERE email = p_email
-    AND id != v_usuario_id;
-
-    IF v_count_email > 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El correo ya está registrado';
-    END IF;
-
-    -- ACTUALIZAR USUARIO
-    UPDATE usuario
-    SET
-        nombre = p_nombre,
-        apellido = p_apellido,
-        email = p_email
-    WHERE id = v_usuario_id;
-
-    -- VERIFICAR SI PERFIL EXISTE
-    SELECT COUNT(*)
-    INTO v_perfil_count
-    FROM perfil_usuario
-    WHERE usuario_id = v_usuario_id;
-
-    -- SI NO EXISTE → INSERT
-    IF v_perfil_count = 0 THEN
-
-        INSERT INTO perfil_usuario(
-    		usuario_id,
-		telefono,
-		fecha_nacimiento,
-    		foto_url,
-    		created_at
-	)
-	VALUES(
-	    v_usuario_id,
-	    p_telefono,
-	    p_birthDate,
-	    p_photoUrl,
-	    (
-        	SELECT created_at
-	        FROM usuario
-        	WHERE id = v_usuario_id
-	    )
-	);
-
-    ELSE
-
-        -- ACTUALIZAR PERFIL
-        UPDATE perfil_usuario
-        SET
-            telefono = p_telefono,
-            fecha_nacimiento = p_birthDate,
-            foto_url = p_photoUrl
-        WHERE usuario_id = v_usuario_id;
-
-    END IF;
-
-END $$
-
+-- =====================================================
+-- SP: CREAR USUARIO_CLUB
+-- =====================================================
 CREATE PROCEDURE sp_create_usuario_club(
     IN p_usuario_id BIGINT,
     IN p_club_id BIGINT,
@@ -281,33 +280,39 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: PANEL DEL CLUB
+-- =====================================================
 CREATE PROCEDURE sp_get_panel_club(
     IN p_usuario_id BIGINT
 )
 BEGIN
 
     SELECT
-    c.id,
-    c.nombre,
-    c.logo_url,
-    c.banner_url,
-    c.descripcion,
-    c.color_primario,
-    c.color_secundario,
-    u.nombre,
-    p.foto_url
-FROM usuario_club uc
-JOIN club c ON uc.club_id = c.id
-JOIN usuario u ON u.id = uc.usuario_id
-LEFT JOIN perfil_usuario p ON p.usuario_id = u.id
-
-WHERE uc.usuario_id = p_usuario_id
-AND uc.rol = 'admin'
-
+        c.id,
+        c.nombre,
+        c.logo_url,
+        c.banner_url,
+        c.descripcion,
+        c.color_primario,
+        c.color_secundario,
+        u.nombre,
+        p.foto_url
+    FROM usuario_club uc
+    JOIN club c ON uc.club_id = c.id
+    JOIN usuario u ON u.id = uc.usuario_id
+    LEFT JOIN perfil_usuario p ON p.usuario_id = u.id
+    WHERE uc.usuario_id = p_usuario_id
+      AND uc.rol = 'admin'
     LIMIT 1;
 
 END $$
 
+
+-- =====================================================
+-- SP: ACTUALIZAR CLUB
+-- =====================================================
 CREATE PROCEDURE sp_update_club(
     IN p_id BIGINT,
     IN p_descripcion TEXT,
@@ -329,6 +334,10 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: CREAR SOLICITUD
+-- =====================================================
 CREATE PROCEDURE sp_create_solicitud(
     IN p_usuario_id BIGINT,
     IN p_club_id BIGINT,
@@ -339,7 +348,6 @@ BEGIN
 
     DECLARE v_exists INT;
 
-    -- ✅ YA PERTENECE A UN CLUB
     SELECT COUNT(*)
     INTO v_exists
     FROM usuario_club
@@ -351,7 +359,6 @@ BEGIN
         SET MESSAGE_TEXT = 'El usuario ya pertenece a un club';
     END IF;
 
-    -- ✅ YA TIENE SOLICITUD PENDIENTE
     SELECT COUNT(*)
     INTO v_exists
     FROM solicitud
@@ -384,6 +391,10 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: CREAR SOLICITUD DEPORTIVA
+-- =====================================================
 CREATE PROCEDURE sp_create_solicitud_deportiva(
     IN p_solicitud_id BIGINT,
     IN p_peso DECIMAL(5,2),
@@ -410,6 +421,10 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: ACTUALIZAR ESTADO SOLICITUD
+-- =====================================================
 CREATE PROCEDURE sp_update_solicitud_estado(
     IN p_solicitud_id BIGINT,
     IN p_estado VARCHAR(20)
@@ -422,39 +437,42 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: OBTENER SOLICITUDES POR CLUB
+-- =====================================================
 CREATE PROCEDURE sp_get_solicitudes_by_club(
     IN p_club_id BIGINT
 )
 BEGIN
 
     SELECT
-    s.id,
-    s.rol_solicitado,
-    s.estado,
-    s.mensaje,
-    u.nombre,
-
-    TIMESTAMPDIFF(YEAR, pu.fecha_nacimiento, CURDATE()) AS edad,
-
-    sd.peso,
-    sd.estatura,
-    sd.experiencia,
-    sd.especialidad
-
-FROM solicitud s
-JOIN usuario u ON s.usuario_id = u.id
-LEFT JOIN perfil_usuario pu ON pu.usuario_id = u.id
-LEFT JOIN solicitud_deportiva sd ON sd.solicitud_id = s.id
-
-WHERE s.club_id = p_club_id
-AND s.estado = 'pendiente';
-
+        s.id,
+        s.rol_solicitado,
+        s.estado,
+        s.mensaje,
+        u.nombre,
+        TIMESTAMPDIFF(YEAR, pu.fecha_nacimiento, CURDATE()) AS edad,
+        sd.peso,
+        sd.estatura,
+        sd.experiencia,
+        sd.especialidad
+    FROM solicitud s
+    JOIN usuario u ON s.usuario_id = u.id
+    LEFT JOIN perfil_usuario pu ON pu.usuario_id = u.id
+    LEFT JOIN solicitud_deportiva sd ON sd.solicitud_id = s.id
+    WHERE s.club_id = p_club_id
+      AND s.estado = 'pendiente';
 
 END $$
 
+
+-- =====================================================
+-- SP: CREAR HORARIO DE ENTRENAMIENTO
+-- =====================================================
 CREATE PROCEDURE sp_create_horario_entrenamiento(
-    IN p_club_id BIGINT,
-    IN p_dia VARCHAR(15),
+    IN p_grupo_id BIGINT,
+    IN p_dia_semana ENUM('lunes','martes','miercoles','jueves','viernes','sabado','domingo'),
     IN p_hora_inicio TIME,
     IN p_hora_fin TIME,
     IN p_descripcion TEXT,
@@ -463,23 +481,23 @@ CREATE PROCEDURE sp_create_horario_entrenamiento(
 BEGIN
 
     INSERT INTO horario_entrenamiento(
-        club_id,
-        dia,
+        grupo_id,
+        dia_semana,
         hora_inicio,
         hora_fin,
         descripcion,
         ubicacion,
-        estado,
+        activo,
         created_at
     )
     VALUES(
-        p_club_id,
-        p_dia,
+        p_grupo_id,
+        p_dia_semana,
         p_hora_inicio,
         p_hora_fin,
         p_descripcion,
         p_ubicacion,
-        'activo',
+        TRUE,
         CURRENT_TIMESTAMP
     );
 
@@ -487,9 +505,13 @@ BEGIN
 
 END $$
 
+
+-- =====================================================
+-- SP: ACTUALIZAR HORARIO DE ENTRENAMIENTO
+-- =====================================================
 CREATE PROCEDURE sp_update_horario_entrenamiento(
     IN p_horario_id BIGINT,
-    IN p_dia VARCHAR(15),
+    IN p_dia_semana ENUM('lunes','martes','miercoles','jueves','viernes','sabado','domingo'),
     IN p_hora_inicio TIME,
     IN p_hora_fin TIME,
     IN p_descripcion TEXT,
@@ -499,48 +521,62 @@ BEGIN
 
     UPDATE horario_entrenamiento
     SET
-        dia = p_dia,
+        dia_semana = p_dia_semana,
         hora_inicio = p_hora_inicio,
         hora_fin = p_hora_fin,
         descripcion = p_descripcion,
         ubicacion = p_ubicacion
-    WHERE id = p_horario_id
-    AND deleted_at IS NULL;
+    WHERE id = p_horario_id;
 
 END $$
 
+
+-- =====================================================
+-- SP: ELIMINAR HORARIO (SOFT DELETE)
+-- =====================================================
 CREATE PROCEDURE sp_delete_horario_entrenamiento(
     IN p_horario_id BIGINT
 )
 BEGIN
 
     UPDATE horario_entrenamiento
-    SET deleted_at = CURRENT_TIMESTAMP
-    WHERE id = p_horario_id
-    AND deleted_at IS NULL;
+    SET activo = FALSE
+    WHERE id = p_horario_id;
 
 END $$
 
-CREATE PROCEDURE sp_get_horarios_by_club(
-    IN p_club_id BIGINT
+
+-- =====================================================
+-- SP: OBTENER HORARIOS POR CLUB
+-- (usado por ClubRepositoryImpl.getHorariosByGroupId)
+-- =====================================================
+CREATE PROCEDURE sp_get_horarios_by_grupo(
+    IN p_grupo_id BIGINT
 )
 BEGIN
 
     SELECT
         id,
-        dia,
-        DATE_FORMAT(hora_inicio, '%H:%i') AS hora_inicio,
-        DATE_FORMAT(hora_fin, '%H:%i') AS hora_fin,
+        dia_semana,
+        TIME_FORMAT(hora_inicio, '%H:%i') AS hora_inicio,
+        TIME_FORMAT(hora_fin, '%H:%i') AS hora_fin,
         descripcion,
         ubicacion,
-        estado
+        activo
     FROM horario_entrenamiento
-    WHERE club_id = p_club_id
-      AND deleted_at IS NULL
-    ORDER BY FIELD(dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'), hora_inicio;
+    WHERE grupo_id = p_grupo_id
+    AND activo = TRUE
+    ORDER BY FIELD(
+        dia_semana,
+        'lunes','martes','miercoles','jueves','viernes','sabado','domingo'
+    ), hora_inicio;
 
 END $$
 
+
+-- =====================================================
+-- SP: OBTENER HORARIOS POR SLUG
+-- =====================================================
 CREATE PROCEDURE sp_get_horarios_by_club_slug(
     IN p_slug VARCHAR(50)
 )
@@ -548,121 +584,23 @@ BEGIN
 
     SELECT
         he.id,
-        he.dia,
-        DATE_FORMAT(he.hora_inicio, '%H:%i') AS hora_inicio,
-        DATE_FORMAT(he.hora_fin, '%H:%i') AS hora_fin,
+        he.dia_semana,
+        TIME_FORMAT(he.hora_inicio, '%H:%i') AS hora_inicio,
+        TIME_FORMAT(he.hora_fin, '%H:%i') AS hora_fin,
         he.descripcion,
         he.ubicacion,
-        he.estado
+        he.activo
     FROM horario_entrenamiento he
-    JOIN club c ON c.id = he.club_id
+    JOIN grupo_deportivo g ON g.id = he.grupo_id
+    JOIN club c ON c.id = g.club_id
     WHERE c.slug = p_slug
-      AND he.deleted_at IS NULL
-      AND he.estado = 'activo'
-    ORDER BY FIELD(he.dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'), he.hora_inicio;
-END $$
-
-CREATE PROCEDURE sp_create_horario_entrenamiento(
-    IN p_club_id BIGINT,
-    IN p_dia VARCHAR(15),
-    IN p_hora_inicio TIME,
-    IN p_hora_fin TIME,
-    IN p_descripcion TEXT,
-    IN p_ubicacion VARCHAR(100)
-)
-BEGIN
-    INSERT INTO horario_entrenamiento(
-        club_id,
-        dia,
-        hora_inicio,
-        hora_fin,
-        descripcion,
-        ubicacion,
-        estado,
-        created_at
-    )
-    VALUES(
-        p_club_id,
-        p_dia,
-        p_hora_inicio,
-        p_hora_fin,
-        p_descripcion,
-        p_ubicacion,
-        'activo',
-        CURRENT_TIMESTAMP
-    );
-
-    SELECT LAST_INSERT_ID() AS horario_id;
-END $$
-
-CREATE PROCEDURE sp_update_horario_entrenamiento(
-    IN p_horario_id BIGINT,
-    IN p_dia VARCHAR(15),
-    IN p_hora_inicio TIME,
-    IN p_hora_fin TIME,
-    IN p_descripcion TEXT,
-    IN p_ubicacion VARCHAR(100)
-)
-BEGIN
-    UPDATE horario_entrenamiento
-    SET
-        dia = p_dia,
-        hora_inicio = p_hora_inicio,
-        hora_fin = p_hora_fin,
-        descripcion = p_descripcion,
-        ubicacion = p_ubicacion
-    WHERE id = p_horario_id
-      AND deleted_at IS NULL;
-END $$
-
-CREATE PROCEDURE sp_delete_horario_entrenamiento(
-    IN p_horario_id BIGINT
-)
-BEGIN
-    UPDATE horario_entrenamiento
-    SET deleted_at = CURRENT_TIMESTAMP
-    WHERE id = p_horario_id
-      AND deleted_at IS NULL;
-END $$
-
-CREATE PROCEDURE sp_get_horarios_by_club(
-    IN p_club_id BIGINT
-)
-BEGIN
-    SELECT
-        id,
-        dia,
-        DATE_FORMAT(hora_inicio, '%H:%i') AS hora_inicio,
-        DATE_FORMAT(hora_fin, '%H:%i') AS hora_fin,
-        descripcion,
-        ubicacion,
-        estado
-    FROM horario_entrenamiento
-    WHERE club_id = p_club_id
-      AND deleted_at IS NULL
-    ORDER BY FIELD(dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'), hora_inicio;
+    AND he.activo = TRUE
+    ORDER BY FIELD(
+        he.dia_semana,
+        'lunes','martes','miercoles','jueves','viernes','sabado','domingo'
+    ), he.hora_inicio;
 
 END $$
 
-CREATE PROCEDURE sp_get_horarios_by_club_slug(
-    IN p_slug VARCHAR(50)
-)
-BEGIN
-    SELECT
-        he.id,
-        he.dia,
-        DATE_FORMAT(he.hora_inicio, '%H:%i') AS hora_inicio,
-        DATE_FORMAT(he.hora_fin, '%H:%i') AS hora_fin,
-        he.descripcion,
-        he.ubicacion,
-        he.estado
-    FROM horario_entrenamiento he
-    JOIN club c ON c.id = he.club_id
-    WHERE c.slug = p_slug
-      AND he.deleted_at IS NULL
-      AND he.estado = 'activo'
-    ORDER BY FIELD(he.dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'), he.hora_inicio;
-
-END $$
 
 DELIMITER ;

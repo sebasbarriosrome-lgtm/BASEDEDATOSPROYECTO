@@ -1,134 +1,131 @@
+-- PERFIL USUARIO
 ALTER TABLE perfil_usuario
 ADD CONSTRAINT fk_perfil_usuario_usuario
-FOREIGN KEY (usuario_id)
-REFERENCES usuario(id);
+FOREIGN KEY (usuario_id) REFERENCES usuario(id);
 
+-- USUARIO CLUB
 ALTER TABLE usuario_club
 ADD CONSTRAINT fk_usuario_club_usuario
-FOREIGN KEY (usuario_id)
-REFERENCES usuario(id);
+FOREIGN KEY (usuario_id) REFERENCES usuario(id);
 
 ALTER TABLE usuario_club
 ADD CONSTRAINT fk_usuario_club_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+FOREIGN KEY (club_id) REFERENCES club(id);
 
+-- SOLICITUD
 ALTER TABLE solicitud
 ADD CONSTRAINT fk_solicitud_usuario
-FOREIGN KEY (usuario_id)
-REFERENCES usuario(id);
+FOREIGN KEY (usuario_id) REFERENCES usuario(id);
 
 ALTER TABLE solicitud
 ADD CONSTRAINT fk_solicitud_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+FOREIGN KEY (club_id) REFERENCES club(id);
 
+-- SOLICITUD DEPORTIVA
 ALTER TABLE solicitud_deportiva
 ADD CONSTRAINT fk_solicitud_deportiva_solicitud
-FOREIGN KEY (solicitud_id)
-REFERENCES solicitud(id);
+FOREIGN KEY (solicitud_id) REFERENCES solicitud(id);
 
+-- INVITACION
 ALTER TABLE invitacion
 ADD CONSTRAINT fk_invitacion_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+FOREIGN KEY (club_id) REFERENCES club(id);
 
 ALTER TABLE invitacion
 ADD CONSTRAINT fk_invitacion_usuario
-FOREIGN KEY (usuario_id)
-REFERENCES usuario(id);
+FOREIGN KEY (usuario_id) REFERENCES usuario(id);
 
+-- CATEGORIA
 ALTER TABLE categoria
 ADD CONSTRAINT fk_categoria_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+FOREIGN KEY (club_id) REFERENCES club(id);
 
+-- GRUPO DEPORTIVO
 ALTER TABLE grupo_deportivo
 ADD CONSTRAINT fk_grupo_deportivo_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+FOREIGN KEY (club_id) REFERENCES club(id);
 
+-- ENTRENADOR
 ALTER TABLE entrenador
 ADD CONSTRAINT fk_entrenador_usuario_club
-FOREIGN KEY (usuario_club_id)
-REFERENCES usuario_club(id);
+FOREIGN KEY (usuario_club_id) REFERENCES usuario_club(id);
 
+-- DEPORTISTA
 ALTER TABLE deportista
 ADD CONSTRAINT fk_deportista_usuario_club
-FOREIGN KEY (usuario_club_id)
-REFERENCES usuario_club(id);
+FOREIGN KEY (usuario_club_id) REFERENCES usuario_club(id);
 
 ALTER TABLE deportista
 ADD CONSTRAINT fk_deportista_categoria
-FOREIGN KEY (categoria_id)
-REFERENCES categoria(id);
+FOREIGN KEY (categoria_id) REFERENCES categoria(id);
 
 ALTER TABLE deportista
 ADD CONSTRAINT fk_deportista_grupo
-FOREIGN KEY (grupo_id)
-REFERENCES grupo_deportivo(id);
+FOREIGN KEY (grupo_id) REFERENCES grupo_deportivo(id);
 
-ALTER TABLE deportista
-ADD CONSTRAINT fk_deportista_acudiente
-FOREIGN KEY (acudiente_id)
-REFERENCES acudiente(id);
-
+-- ENTRENADOR CATEGORIA
 ALTER TABLE entrenador_categoria
 ADD CONSTRAINT fk_entrenador_categoria_entrenador
-FOREIGN KEY (entrenador_id)
-REFERENCES entrenador(id);
+FOREIGN KEY (entrenador_id) REFERENCES entrenador(id);
 
 ALTER TABLE entrenador_categoria
 ADD CONSTRAINT fk_entrenador_categoria_categoria
-FOREIGN KEY (categoria_id)
-REFERENCES categoria(id);
+FOREIGN KEY (categoria_id) REFERENCES categoria(id);
 
+-- GRUPO ENTRENADOR
 ALTER TABLE grupo_entrenador
 ADD CONSTRAINT fk_grupo_entrenador_grupo
-FOREIGN KEY (grupo_id)
-REFERENCES grupo_deportivo(id);
+FOREIGN KEY (grupo_id) REFERENCES grupo_deportivo(id);
 
 ALTER TABLE grupo_entrenador
 ADD CONSTRAINT fk_grupo_entrenador_entrenador
-FOREIGN KEY (entrenador_id)
-REFERENCES entrenador(id);
+FOREIGN KEY (entrenador_id) REFERENCES entrenador(id);
 
+-- SESION ENTRENAMIENTO
 ALTER TABLE sesion_entrenamiento
 ADD CONSTRAINT fk_sesion_entrenamiento_grupo
-FOREIGN KEY (grupo_id)
-REFERENCES grupo_deportivo(id);
+FOREIGN KEY (grupo_id) REFERENCES grupo_deportivo(id);
 
-ALTER TABLE actividad
-ADD CONSTRAINT fk_actividad_club
-FOREIGN KEY (club_id)
-REFERENCES club(id);
+ALTER TABLE sesion_entrenamiento
+ADD CONSTRAINT fk_sesion_entrenamiento_entrenador
+FOREIGN KEY (entrenador_id) REFERENCES entrenador(id);
 
+-- SESION ACTIVIDAD
+ALTER TABLE sesion_actividad
+ADD CONSTRAINT fk_sesion_actividad_sesion
+FOREIGN KEY (sesion_id) REFERENCES sesion_entrenamiento(id);
+
+ALTER TABLE sesion_actividad
+ADD CONSTRAINT fk_sesion_actividad_actividad
+FOREIGN KEY (actividad_id) REFERENCES actividad(id);
+
+-- ASISTENCIA
 ALTER TABLE asistencia
 ADD CONSTRAINT fk_asistencia_deportista
-FOREIGN KEY (deportista_id)
-REFERENCES deportista(id);
+FOREIGN KEY (deportista_id) REFERENCES deportista(id);
 
 ALTER TABLE asistencia
 ADD CONSTRAINT fk_asistencia_sesion
-FOREIGN KEY (sesion_id)
-REFERENCES sesion_entrenamiento(id);
+FOREIGN KEY (sesion_id) REFERENCES sesion_entrenamiento(id);
 
+-- METRICAS SESION
 ALTER TABLE metricas_sesion
 ADD CONSTRAINT fk_metricas_deportista
-FOREIGN KEY (deportista_id)
-REFERENCES deportista(id);
+FOREIGN KEY (deportista_id) REFERENCES deportista(id);
 
 ALTER TABLE metricas_sesion
 ADD CONSTRAINT fk_metricas_entrenador
-FOREIGN KEY (entrenador_id)
-REFERENCES entrenador(id);
+FOREIGN KEY (entrenador_id) REFERENCES entrenador(id);
 
 ALTER TABLE metricas_sesion
 ADD CONSTRAINT fk_metricas_sesion
-FOREIGN KEY (sesion_id)
-REFERENCES sesion_entrenamiento(id);
+FOREIGN KEY (sesion_id) REFERENCES sesion_entrenamiento(id);
 
 ALTER TABLE metricas_sesion
-ADD CONSTRAINT fk_metricas_actividad
-FOREIGN KEY (actividad_id)
-REFERENCES actividad(id);
+ADD CONSTRAINT fk_metricas_sesion_actividad
+FOREIGN KEY (sesion_actividad_id) REFERENCES sesion_actividad(id);
+
+-- HORARIO
+ALTER TABLE horario_entrenamiento
+ADD CONSTRAINT fk_horario_grupo
+FOREIGN KEY (grupo_id) REFERENCES grupo_deportivo(id);

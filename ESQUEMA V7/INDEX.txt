@@ -1,62 +1,55 @@
-CREATE INDEX idx_usuario_email
-ON usuario(email);
+-- USUARIO
+CREATE UNIQUE INDEX uq_usuario_email ON usuario(email);
+CREATE INDEX idx_usuario_nombre ON usuario(nombre);
 
-CREATE INDEX idx_usuario_nombre
-ON usuario(nombre);
+-- CLUB
+CREATE UNIQUE INDEX uq_club_slug ON club(slug);
+CREATE INDEX idx_club_nombre ON club(nombre);
+CREATE INDEX idx_club_ciudad ON club(ciudad);
 
-CREATE INDEX idx_club_slug
-ON club(slug);
+-- USUARIO CLUB
+CREATE UNIQUE INDEX uq_usuario_club ON usuario_club(usuario_id, club_id);
+CREATE INDEX idx_usuario_club_usuario ON usuario_club(usuario_id);
+CREATE INDEX idx_usuario_club_club ON usuario_club(club_id);
 
-CREATE INDEX idx_club_nombre
-ON club(nombre);
+-- SOLICITUD
+CREATE INDEX idx_solicitud_usuario ON solicitud(usuario_id);
+CREATE INDEX idx_solicitud_club ON solicitud(club_id);
 
-CREATE INDEX idx_club_ciudad
-ON club(ciudad);
+-- INVITACION
+CREATE INDEX idx_invitacion_usuario ON invitacion(usuario_id);
+CREATE INDEX idx_invitacion_club ON invitacion(club_id);
 
-CREATE INDEX idx_usuario_club_usuario
-ON usuario_club(usuario_id);
+-- CATEGORIA
+CREATE INDEX idx_categoria_club ON categoria(club_id);
 
-CREATE INDEX idx_usuario_club_club
-ON usuario_club(club_id);
+-- GRUPO DEPORTIVO
+CREATE INDEX idx_grupo_deportivo_club ON grupo_deportivo(club_id);
 
-CREATE INDEX idx_solicitud_usuario
-ON solicitud(usuario_id);
+-- DEPORTISTA
+CREATE INDEX idx_deportista_categoria ON deportista(categoria_id);
+CREATE INDEX idx_deportista_grupo ON deportista(grupo_id);
 
-CREATE INDEX idx_solicitud_club
-ON solicitud(club_id);
+-- TABLAS INTERMEDIAS
+CREATE UNIQUE INDEX uq_grupo_entrenador ON grupo_entrenador(grupo_id, entrenador_id);
+CREATE UNIQUE INDEX uq_entrenador_categoria ON entrenador_categoria(entrenador_id, categoria_id);
 
-CREATE INDEX idx_invitacion_usuario
-ON invitacion(usuario_id);
+-- SESION
+CREATE INDEX idx_sesion_grupo ON sesion_entrenamiento(grupo_id);
+CREATE INDEX idx_sesion_fecha ON sesion_entrenamiento(fecha);
 
-CREATE INDEX idx_invitacion_club
-ON invitacion(club_id);
+-- SESION ACTIVIDAD
+CREATE INDEX idx_sesion_actividad_sesion ON sesion_actividad(sesion_id);
+CREATE INDEX idx_sesion_actividad_actividad ON sesion_actividad(actividad_id);
 
-CREATE INDEX idx_categoria_club
-ON categoria(club_id);
+-- ASISTENCIA
+CREATE INDEX idx_asistencia_deportista ON asistencia(deportista_id);
+CREATE INDEX idx_asistencia_sesion ON asistencia(sesion_id);
 
-CREATE INDEX idx_grupo_deportivo_club
-ON grupo_deportivo(club_id);
+-- METRICAS
+CREATE INDEX idx_metricas_deportista ON metricas_sesion(deportista_id);
+CREATE INDEX idx_metricas_sesion ON metricas_sesion(sesion_id);
+CREATE INDEX idx_metricas_sesion_actividad ON metricas_sesion(sesion_actividad_id);
 
-CREATE INDEX idx_deportista_categoria
-ON deportista(categoria_id);
-
-CREATE INDEX idx_deportista_grupo
-ON deportista(grupo_id);
-
-CREATE INDEX idx_sesion_grupo
-ON sesion_entrenamiento(grupo_id);
-
-CREATE INDEX idx_sesion_fecha
-ON sesion_entrenamiento(fecha);
-
-CREATE INDEX idx_asistencia_deportista
-ON asistencia(deportista_id);
-
-CREATE INDEX idx_asistencia_sesion
-ON asistencia(sesion_id);
-
-CREATE INDEX idx_metricas_deportista
-ON metricas_sesion(deportista_id);
-
-CREATE INDEX idx_metricas_sesion
-ON metricas_sesion(sesion_id);
+-- HORARIO
+CREATE INDEX idx_horario_grupo ON horario_entrenamiento(grupo_id);

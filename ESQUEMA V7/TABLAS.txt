@@ -98,16 +98,6 @@ CREATE TABLE entrenador (
     deleted_at TIMESTAMP NULL
 );
 
-CREATE TABLE acudiente (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(20),
-    apellido VARCHAR(20),
-    telefono VARCHAR(15),
-    telefono_emergencia VARCHAR(15),
-    email VARCHAR(30),
-    created_at TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
 
 CREATE TABLE deportista (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -117,7 +107,6 @@ CREATE TABLE deportista (
     fecha_nacimiento DATE,
     peso DECIMAL(5,2),
     estatura BIGINT,
-    acudiente_id BIGINT,
     created_at TIMESTAMP,
     deleted_at TIMESTAMP NULL
 );
@@ -136,20 +125,36 @@ CREATE TABLE grupo_entrenador (
 
 CREATE TABLE sesion_entrenamiento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    grupo_id BIGINT,
-    fecha DATE,
+    grupo_id BIGINT NOT NULL,
+    entrenador_id BIGINT,
+    fecha DATE NOT NULL,
+    hora_inicio TIME,
+    hora_fin TIME,
+    estado ENUM('programada','completada','cancelada') DEFAULT 'programada',
     descripcion TEXT,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
     deleted_at TIMESTAMP NULL
 );
 
 CREATE TABLE actividad (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    club_id BIGINT,
-    nombre VARCHAR(50),
+    nombre VARCHAR(50) NOT NULL,
     descripcion TEXT,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE sesion_actividad (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sesion_id BIGINT NOT NULL,
+    actividad_id BIGINT NOT NULL,
+    orden INT,
+    duracion_minutos INT,
+    descripcion TEXT,
+
+    FOREIGN KEY (sesion_id) REFERENCES sesion_entrenamiento(id),
+    FOREIGN KEY (actividad_id) REFERENCES actividad(id)
 );
 
 CREATE TABLE asistencia (
@@ -179,26 +184,12 @@ CREATE TABLE metricas_sesion (
 
 CREATE TABLE horario_entrenamiento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    club_id BIGINT,
-    dia VARCHAR(15),
-    hora_inicio TIME,
-    hora_fin TIME,
+    grupo_id BIGINT NOT NULL,
+    dia_semana ENUM('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
     ubicacion VARCHAR(100),
-    descripcion TEXT,
-    estado ENUM('activo','cancelado') DEFAULT 'activo',
-    created_at TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
-CREATE TABLE horario_entrenamiento (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    club_id BIGINT,
-    dia VARCHAR(15),
-    hora_inicio TIME,
-    hora_fin TIME,
-    ubicacion VARCHAR(100),
-    descripcion TEXT,
-    estado ENUM('activo','cancelado') DEFAULT 'activo',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
