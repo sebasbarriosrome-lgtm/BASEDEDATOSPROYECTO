@@ -1,0 +1,204 @@
+CREATE TABLE usuario (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(20),
+    apellido VARCHAR(20),
+    email VARCHAR(35),
+    password VARCHAR(300),
+    rol_global ENUM('usuario','admin_plataforma'),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE perfil_usuario (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT,
+    telefono VARCHAR(15),
+    fecha_nacimiento DATE,
+    foto_url VARCHAR(255),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE club (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50),
+    slug VARCHAR(50),
+    ciudad VARCHAR(20),
+    descripcion TEXT,
+    logo_url TEXT,
+    banner_url TEXT,
+    color_primario VARCHAR(20),
+    color_secundario VARCHAR(20),
+    contacto VARCHAR(20),
+    estado ENUM('activo','inactivo','suspendido'),
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE usuario_club (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT,
+    club_id BIGINT,
+    rol ENUM('admin','deportista','entrenador'),
+    estado ENUM('activo','retirado','expulsado','pendiente'),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE solicitud (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT,
+    club_id BIGINT,
+    rol_solicitado VARCHAR(20),
+    mensaje TEXT,
+    estado VARCHAR(10),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE solicitud_deportiva (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    solicitud_id BIGINT,
+    peso DECIMAL(5,2),
+    estatura BIGINT,
+    experiencia TEXT,
+    especialidad TEXT
+);
+
+CREATE TABLE invitacion (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    usuario_id BIGINT,
+    rol VARCHAR(15),
+    estado VARCHAR(20),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE categoria (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    nombre VARCHAR(20),
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE grupo_deportivo (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    nombre VARCHAR(25),
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE entrenador (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_club_id BIGINT,
+    experiencia TEXT,
+    especialidad TEXT,
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE acudiente (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(20),
+    apellido VARCHAR(20),
+    telefono VARCHAR(15),
+    telefono_emergencia VARCHAR(15),
+    email VARCHAR(30),
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE deportista (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_club_id BIGINT,
+    categoria_id BIGINT,
+    grupo_id BIGINT,
+    fecha_nacimiento DATE,
+    peso DECIMAL(5,2),
+    estatura BIGINT,
+    acudiente_id BIGINT,
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE entrenador_categoria (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    entrenador_id BIGINT,
+    categoria_id BIGINT
+);
+
+CREATE TABLE grupo_entrenador (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    grupo_id BIGINT,
+    entrenador_id BIGINT
+);
+
+CREATE TABLE sesion_entrenamiento (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    grupo_id BIGINT,
+    fecha DATE,
+    descripcion TEXT,
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE actividad (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    nombre VARCHAR(50),
+    descripcion TEXT,
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE asistencia (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    deportista_id BIGINT,
+    sesion_id BIGINT,
+    estado ENUM('presente','ausente'),
+    fecha DATE,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE metricas_sesion (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    deportista_id BIGINT,
+    entrenador_id BIGINT,
+    sesion_id BIGINT,
+    actividad_id BIGINT,
+    tiempo DECIMAL(4,2),
+    distancia DECIMAL(5,2),
+    velocidad DECIMAL(4,2),
+    tecnica INT,
+    rendimiento_fisico INT,
+    observaciones TEXT,
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE horario_entrenamiento (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    dia VARCHAR(15),
+    hora_inicio TIME,
+    hora_fin TIME,
+    ubicacion VARCHAR(100),
+    descripcion TEXT,
+    estado ENUM('activo','cancelado') DEFAULT 'activo',
+    created_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE horario_entrenamiento (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    club_id BIGINT,
+    dia VARCHAR(15),
+    hora_inicio TIME,
+    hora_fin TIME,
+    ubicacion VARCHAR(100),
+    descripcion TEXT,
+    estado ENUM('activo','cancelado') DEFAULT 'activo',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
