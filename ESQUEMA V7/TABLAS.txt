@@ -190,8 +190,11 @@ CREATE TABLE horario_entrenamiento (
     dia_semana ENUM('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
+    descripcion TEXT,
     ubicacion VARCHAR(100),
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    categoria VARCHAR(100)
 );
 
