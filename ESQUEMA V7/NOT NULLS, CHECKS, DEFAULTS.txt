@@ -67,6 +67,10 @@ ALTER TABLE entrenador_categoria
 MODIFY entrenador_id BIGINT NOT NULL,
 MODIFY categoria_id BIGINT NOT NULL;
 
+ALTER TABLE horario_entrenamiento
+ADD CONSTRAINT fk_horario_categoria
+FOREIGN KEY (categoria_id) REFERENCES categoria(id);
+
 ALTER TABLE grupo_entrenador
 MODIFY grupo_id BIGINT NOT NULL,
 MODIFY entrenador_id BIGINT NOT NULL;

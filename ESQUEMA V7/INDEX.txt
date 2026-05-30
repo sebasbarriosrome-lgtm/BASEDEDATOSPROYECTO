@@ -53,3 +53,4 @@ CREATE INDEX idx_metricas_sesion_actividad ON metricas_sesion(sesion_actividad_i
 
 -- HORARIO
 CREATE INDEX idx_horario_grupo ON horario_entrenamiento(grupo_id);
+CREATE INDEX idx_horario_categoria ON horario_entrenamiento(categoria_id);
